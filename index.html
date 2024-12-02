@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Floating Window</title>
+  <style>
+    /* Floating Window Styles */
+    #assistant {
+      position: fixed;
+      top: 20px; /* Start near the top of the viewport */
+      left: 20px; /* Start near the left of the viewport */
+      width: calc(100% - 40px); /* Adjust width dynamically for smaller screens */
+      max-width: 400px; /* Maximum width for larger screens */
+      height: calc(100% - 40px); /* Adjust height dynamically for smaller screens */
+      max-height: 600px; /* Maximum height for larger screens */
+      border: 1px solid black;
+      background-color: white;
+      z-index: 9999;
+      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+      border-radius: 5px;
+      overflow: hidden; /* Prevents any content overflow */
+    }
+
+    .assistant-body {
+      padding: 10px;
+      overflow-y: auto; /* Enable scrolling for the content inside the body if needed */
+      height: calc(100% - 50px); /* Leaves space for the header */
+    }
+
+    .assistant-header {
+      cursor: move;
+      padding: 10px;
+      background-color: #f0f0f0;
+      border-bottom: 1px solid #ccc;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    /* Thumbnail Image Area */
+    .thumbnail-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-bottom: 10px;
+      max-height: 60px;
+      overflow-x: auto; /* Allow horizontal scrolling if images overflow */
+      overflow-y: hidden;
+    }
+
+    .thumbnail-container img {
+      width: 50px;
+      height: 50px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      object-fit: cover;
+    }
+
+    .assistant-body p {
+      margin: 0;
+      margin-bottom: 10px;
+    }
+
+    .assistant-body ol {
+      padding-left: 20px;
+      margin-bottom: 10px;
+    }
+
+    .button-container {
+      display: flex;
+      justify-content: space-evenly;
+      margin-bottom: 10px;
+    }
+
+    .button-container button {
+      padding: 5px 10px;
+      border: none;
+      cursor: pointer;
+      border-radius: 3px;
+      font-size: 14px;
+    }
+
+    .button-container button:hover {
+      opacity: 0.9;
+    }
+
+    .screenshot-btn {
+      background-color: #333;
+      color: white;
+    }
+
+    .pass-btn {
+      background-color: green;
+      color: white;
+    }
+
+    .fail-btn {
+      background-color: red;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div id="assistant">
+    <div class="assistant-header">
+      Drag to move
+    </div>
+    <div class="assistant-body">
+      <!-- Image Thumbnails Section -->
+      <div class="thumbnail-container" id="thumbnailContainer">
+        <!-- Thumbnails will be dynamically added here -->
+      </div>
+
+      <p><strong>INFO :</strong></p>
+      <ol>
+        <li>You can type any number of text and take screenshots from below.</li>
+        <li>You have to click "Pass" to send that info to the server, which will be sent as "PASS" (label).</li>
+        <li>
+          Clicking "Fail" will send the message to the server, but the system should ask for confirmation. If the user
+          confirms, the AJAX post should include the text, screenshots, and "Fail". The window will close after that.
+        </li>
+      </ol>
+      <div style="border: 1px solid #ccc; height: 100px; margin-bottom: 10px; overflow-y: auto;">
+        <textarea id="textInput" style="width: 100%; height: 90%; border: none; resize: none;" placeholder="Type here..."></textarea>
+      </div>
+      <div class="button-container">
+        <button class="screenshot-btn" onclick="takeScreenshot()">Screenshot</button>
+        <button class="pass-btn" onclick="sendData('PASS')">Pass</button>
+        <button class="fail-btn" onclick="sendData('FAIL')">Fail</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Make the Assistant Draggable Across the Entire Screen
+    const assistant = document.getElementById('assistant');
+    const header = assistant.querySelector('.assistant-header');
+
+    let isDragging = false;
+    let offsetX, offsetY;
+
+    header.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      offsetX = e.clientX - assistant.offsetLeft;
+      offsetY = e.clientY - assistant.offsetTop;
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (isDragging) {
+        // Calculate new position
+        let newX = e.clientX - offsetX;
+        let newY = e.clientY - offsetY;
+
+        // Ensure it stays within the screen bounds
+        const maxWidth = window.innerWidth - assistant.offsetWidth;
+        const maxHeight = window.innerHeight - assistant.offsetHeight;
+
+        if (newX < 0) newX = 0;
+        if (newY < 0) newY = 0;
+        if (newX > maxWidth) newX = maxWidth;
+        if (newY > maxHeight) newY = maxHeight;
+
+        assistant.style.left = `${newX}px`;
+        assistant.style.top = `${newY}px`;
+      }
+    });
+
+    document.addEventListener('mouseup', () => {
+      isDragging = false;
+    });
+
+    // Placeholder Functions for Buttons
+    function takeScreenshot() {
+      const thumbnailContainer = document.getElementById('thumbnailContainer');
+      const img = document.createElement('img');
+      img.src = 'https://via.placeholder.com/50'; // Replace with actual screenshot URL
+      thumbnailContainer.appendChild(img);
+    }
+
+    function sendData(label) {
+      const textInput = document.getElementById('textInput').value;
+      const confirmAction = label === "FAIL" ? confirm("Are you sure?") : true;
+
+      if (confirmAction) {
+        alert(`Sending data:\nLabel: ${label}\nText: ${textInput}`);
+        // Example AJAX/Fetch API call to send data
+        /*
+        fetch('/server-endpoint', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ label, textInput })
+        }).then(response => {
+          if (response.ok) alert('Data sent successfully!');
+        }).catch(error => console.error('Error:', error));
+        */
+
+        if (label === "FAIL") {
+          // Close the floating window on fail
+          assistant.style.display = 'none';
+        }
+      }
+    }
+  </script>
+</body>
+</html>
