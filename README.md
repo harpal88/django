@@ -1,0 +1,1 @@
+on running npm start and python manage.py runserver --- you will get authentication page for register or login and as soon as comoplete any of one you will redirect to dashboard and an assistant will open ![image](https://github.com/user-attachments/assets/362d1bf7-1154-46d0-9222-fa4eb30a0f5c)
